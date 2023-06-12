@@ -1,0 +1,33 @@
+clear all
+close all
+clc
+global KEY_IS_PRESSED
+
+url = 'user_url';
+username = 'user_name';
+password = 'user_pass';
+
+fmt_s = imformats;
+format = fmt_s(10).ext{1};
+fmt_s = fmt_s(10);
+alpha = [];
+extraArgs = {};
+KEY_IS_PRESSED = 0;
+while ~ KEY_IS_PRESSED
+    [output,status]=urlwrite_auth(url, username,password,pwd,'temp') ;
+    filename = 'temp';
+    fid = fopen(filename, 'r');
+    filename = fopen(fid);
+    fclose(fid);
+    
+    [X, map] = feval(fmt_s.read, filename, extraArgs{:});
+    figure(1), imshow(X);
+    hold on;
+    delete('temp');
+    
+    gcf;
+    set(gcf, 'KeyPressFcn', @myKeyPressFcn);
+    if(KEY_IS_PRESSED==1)
+        break;
+    end
+end
