@@ -1,0 +1,59 @@
+clear all
+close all
+clc
+global KEY_IS_PRESSED
+% url = 'http://192.168.1.70:8080/shot.jpg';
+x = inputdlg('Enter IP address(digits only):','IP', [1 50]);
+url = strcat('http://',x,'/shot.jpg');
+% ss  = imread(url{1,1});
+% fh = image(ss);
+KEY_IS_PRESSED = 0;
+chk = 1;
+count = 0;
+prev_Centroid = 0;
+while ~ KEY_IS_PRESSED
+    im  = imread(url{1,1});
+    if(chk==1)
+        im_pre = double(rgb2gray(im))/255;
+        [height width] = size(im_pre);
+        chk = chk+1;
+        continue;
+    end
+    
+    im_cur = rgb2gray(im); % get one RGB image
+    im_cur = double(im_cur)/255; % delete borders
+    
+    
+    It = imabsdiff(im_cur(30:end-30,:),im_pre(30:end-30,:)); % bounding box for measurments
+    
+    BW = im2bw(It,.4); % segmentation
+    
+    
+    BW = bwareaopen(BW, 500); % remove small structures
+    BW = imdilate(BW,strel('square',5)); % dilate image
+    s = regionprops(BW,{'Centroid'}); % centroids 
+    centroids = cat(1, s.Centroid);
+    if(isempty(centroids)) % counting logic
+        prev_Centroid = 0;
+     else
+        if(prev_Centroid == 1)
+%             continue
+        else
+            [no_people ~] = size(centroids);
+            count = count + no_people;
+            prev_Centroid = 1;
+            
+        end
+        
+    end
+    figure(1), imshow(im),title(strcat('counting demo, count:',num2str(count)))
+    hold on
+    
+%     figure(1),imshow(ss);
+    gcf;
+    set(gcf, 'KeyPressFcn', @myKeyPressFcn);
+    if(KEY_IS_PRESSED==1)
+        break;
+    end
+
+end
